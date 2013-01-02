@@ -1,0 +1,9 @@
+/.gradle
+out
+*.iml
+*.ipr
+*.iws
+target
+build
+.DS_Store
+/.gradletasknamecache
