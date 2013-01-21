@@ -38,7 +38,7 @@ import org.apache.ibatis.plugin.Signature;
 import org.apache.ibatis.session.ResultHandler;
 import org.apache.ibatis.session.RowBounds;
 import plum.utils.page.PageQuery;
-import plum.utils.page.Paginator;
+import plum.utils.page.Pager;
 import plum.utils.reflex.Reflections;
 
 /**
@@ -58,19 +58,19 @@ import plum.utils.reflex.Reflections;
 public class PaginationInterceptor implements Interceptor, Serializable {
 	/** if true paging interceptor. */
 	private static final ThreadLocal<Boolean> PAGINATION_QUERY = new ThreadLocal<Boolean>();
-	/** storage totla page */
-	private static final ThreadLocal<Paginator> PAGINATION_COUNT = new ThreadLocal<Paginator>();
+	/** storage total page */
+	private static final ThreadLocal<Pager> PAGINATION_COUNT = new ThreadLocal<Pager>();
 	/** paging criteria */
 	private static final ThreadLocal<PageQuery> PAGINATION_CRITERIA_THREAD_LOCAL = new ThreadLocal<PageQuery>();
 	/** serial Version */
 	private static final long serialVersionUID = -6075937069117597841L;
 	/** logging */
 	private static final Log LOG = LogFactory.getLog(PaginationInterceptor.class);
-	/** mapped statement paramter index. */
+	/** mapped statement parameter index. */
 	private static final int MAPPED_STATEMENT_INDEX = 0;
-	/** paramter index. */
+	/** parameter index. */
 	private static final int PARAMETER_INDEX = 1;
-	/** rowbounds index. */
+	/** parameter index. */
 	private static final int ROWBOUNDS_INDEX = 2;
 	/** ResultHandler index. */
 	private static final int RESULT_HANDLER_INDEX = 3;
@@ -90,7 +90,7 @@ public class PaginationInterceptor implements Interceptor, Serializable {
 	 *
 	 * @return total.if total is null ,return -1.
 	 */
-	public static Paginator getTotal() {
+	public static Pager getTotal() {
 		return PAGINATION_COUNT.get();
 	}
 
@@ -124,7 +124,7 @@ public class PaginationInterceptor implements Interceptor, Serializable {
 		//the need for paging intercept.
 		boolean interceptor = ms.getId().matches(_sql_regex);
 		//obtain paging information.
-		final PageQuery pageQuery = interceptor ? Pagings.getInstance().findCriteria(parameter) :
+		final PageQuery pageQuery = interceptor ? PagingParametersFinder.getInstance().findCriteria(parameter) :
 				new PageQuery(PageQuery.DEFAULT_PAGE_SIZE);
 		if (interceptor) {
 			PAGINATION_CRITERIA_THREAD_LOCAL.set(pageQuery);
@@ -147,10 +147,10 @@ public class PaginationInterceptor implements Interceptor, Serializable {
 				//get connection
 				connection = ms.getConfiguration().getEnvironment().getDataSource().getConnection();
 				int count = SQLHelp.getCount(sql, connection, ms, parameter, boundSql, _dialect);
-				final Paginator paginator = new Paginator(pageQuery.getPage(), pageQuery.getPageSize(), count);
-				PAGINATION_COUNT.set(paginator);
+				final Pager pager = new Pager(pageQuery.getPage(), pageQuery.getPageSize(), count);
+				PAGINATION_COUNT.set(pager);
 			} catch (SQLException e) {
-				LOG.error("The total number of access to the database fais.", e);
+				LOG.error("The total number of access to the database failure.", e);
 				PAGINATION_COUNT.set(null);
 			} finally {
 				try {

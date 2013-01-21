@@ -41,4 +41,32 @@ public @interface PaginationParam {
 	 * if you prefer a <code>null</value> in case of the parameter missing.
 	 */
 	boolean required() default true;
+
+	/**
+	 * Page request parameter name.
+	 *
+	 * @return the page name.
+	 */
+	String indexName() default "pageIndex";
+
+	/**
+	 * Page size request parameter name.
+	 *
+	 * @return Per display size.
+	 */
+	String sizeName() default "pageSize";
+
+	/**
+	 * The name of the sort field requests.
+	 *
+	 * @return sort name.
+	 */
+	String sortName() default "sortName";
+
+	/**
+	 * Page Size.
+	 *
+	 * @return page size.
+	 */
+	int pageSize() default 15;
 }

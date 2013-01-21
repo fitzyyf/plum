@@ -27,12 +27,11 @@ import java.util.List;
  * @version $Id: PageQuery.java,v 0.1 2010-11-29 下午05:34:12 badqiu Exp $
  */
 public class PageQuery implements java.io.Serializable {
-	public static final int DEFAULT_PAGE_SIZE = 10;
 	private static final long serialVersionUID = -8000900575354501298L;
 	/** 页数 */
 	private int page;
 	/** 分页大小 */
-	private int pageSize = DEFAULT_PAGE_SIZE;
+	private int pageSize;
 	/** 分页排序信息 */
 	private List<SortInfo> sortInfoList;
 

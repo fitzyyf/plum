@@ -19,7 +19,6 @@ package plum.mvc;
 import java.util.List;
 import java.util.Map;
 
-import plum.mvc.annotation.PaginationParam;
 import org.apache.commons.collections.map.CaseInsensitiveMap;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -28,6 +27,7 @@ import org.springframework.web.bind.support.WebDataBinderFactory;
 import org.springframework.web.context.request.NativeWebRequest;
 import org.springframework.web.method.support.HandlerMethodArgumentResolver;
 import org.springframework.web.method.support.ModelAndViewContainer;
+import plum.mvc.annotation.PaginationParam;
 import plum.utils.page.PageQuery;
 import plum.utils.page.SortInfo;
 
@@ -54,39 +54,6 @@ public class PageArgumentResolver implements HandlerMethodArgumentResolver {
 
 	/** Logger that is available to subclasses */
 	private static final Log logger = LogFactory.getLog(PageArgumentResolver.class);
-	/** 页码Request中的值 */
-	private String pageIndexName = "pageindex";
-	/** 每页显示数量的Request Name值 */
-	private String pageSizeName = "pagesize";
-	/** 排序字段的Request Name值 */
-	private String sortName = "sort";
-
-	/**
-	 * 注入 页码Request中的值
-	 *
-	 * @param pageIndexName 页码Request中的值
-	 */
-	public void setPageIndexName(String pageIndexName) {
-		this.pageIndexName = pageIndexName;
-	}
-
-	/**
-	 * 注入 每页显示数量的Request Name值
-	 *
-	 * @param pageSizeName 每页显示数量的Request Name值
-	 */
-	public void setPageSizeName(String pageSizeName) {
-		this.pageSizeName = pageSizeName;
-	}
-
-	/**
-	 * 注入 排序字段的Request Name值
-	 *
-	 * @param sortName 排序字段的Request Name值
-	 */
-	public void setSortName(String sortName) {
-		this.sortName = sortName;
-	}
 
 	@Override
 	public boolean supportsParameter(MethodParameter parameter) {
@@ -103,35 +70,39 @@ public class PageArgumentResolver implements HandlerMethodArgumentResolver {
 		final Map<String, String[]> params = webRequest.getParameterMap();
 		//转换KEY的大小写
 		final Map<String, String[]> case_params = new CaseInsensitiveMap(params);
-		String sPageIndex = case_params.get(pageIndexName)[0];
-		String sPageSize = case_params.get(pageSizeName)[0];
+		String sPageIndex = case_params.get(attr.indexName())[0];
+		String sPageSize = case_params.get(attr.sizeName())[0];
 		//like sore=column desc,column2 asc
-		String sort = case_params.get(sortName)[0];
+		String sort = case_params.get(attr.sortName())[0];
 
-//		WebUtils.getTargetPage(request, "_target", currentPage);
 
 		final PageQuery pageQuery = new PageQuery();
+		int pageSize;
+		int pageIndex;
 		try {
-			int pageIndex = Integer.valueOf(sPageIndex);
-			int pageSize = Integer.valueOf(sPageSize);
-			List<SortInfo> sortInfos = SortInfo.parseSortColumns(sort);
-
-			pageQuery.setPageSize(pageSize);
-			pageQuery.setSortInfoList(sortInfos);
-			pageQuery.setPage((pageIndex - 1) * pageSize);
-
-			return pageQuery;
+			pageIndex = Integer.valueOf(sPageIndex);
+			pageSize = Integer.valueOf(sPageSize);
 		} catch (NumberFormatException e) {
 			logger.error("number paging is error!", e);
 			if (!attr.required()) {
 				return null;
 			}
-			pageQuery.setPageSize(PageQuery.DEFAULT_PAGE_SIZE);
-			pageQuery.setPage(0);
-			return pageQuery;
+			pageSize = attr.pageSize();
+			pageIndex = 0;
 		} finally {
-			params.clear();
-			case_params.clear();
+			try {
+				case_params.clear();
+			} catch (UnsupportedOperationException e) {
+				logger.warn("param is not clear!");
+			}
 		}
+		final List<SortInfo> sortFields = SortInfo.parseSortColumns(sort);
+
+		pageQuery.setPageSize(pageSize);
+		pageQuery.setSortInfoList(sortFields);
+		pageQuery.setPage((pageIndex - 1) * pageSize);
+
+		return pageQuery;
+
 	}
 }

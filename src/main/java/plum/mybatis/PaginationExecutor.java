@@ -33,7 +33,7 @@ import org.apache.ibatis.session.ResultHandler;
 import org.apache.ibatis.session.RowBounds;
 import org.apache.ibatis.transaction.Transaction;
 import plum.utils.page.PageList;
-import plum.utils.page.Paginator;
+import plum.utils.page.Pager;
 
 
 /**
@@ -75,7 +75,7 @@ public class PaginationExecutor implements Executor {
 							 CacheKey cacheKey, BoundSql boundSql) throws SQLException {
 
 		final List<E> rows = executor.query(ms, parameter, rowBounds, resultHandler);
-		Paginator total = PaginationInterceptor.getTotal();
+		Pager total = PaginationInterceptor.getTotal();
 		try {
 			if (total != null) {
 				final PageList<E> result = new PageList<E>(rows, total);
@@ -105,7 +105,7 @@ public class PaginationExecutor implements Executor {
 			throws SQLException {
 
 		final List<E> rows = executor.query(ms, parameter, rowBounds, resultHandler);
-		Paginator total = PaginationInterceptor.getTotal();
+		Pager total = PaginationInterceptor.getTotal();
 		try {
 			if (total != null) {
 				final PageList<E> result = new PageList<E>(rows, total);

@@ -59,13 +59,13 @@ public class PageList<E> extends ArrayList<E> implements Serializable {
         this.totalItems = totalItems;
     }
 
-    public PageList(Paginator p) {
+    public PageList(Pager p) {
         this.page = p.getPage();
         this.pageSize = p.getPageSize();
         this.totalItems = p.getTotalItems();
     }
     
-    public PageList(Collection<? extends E> c,Paginator p) {
+    public PageList(Collection<? extends E> c,Pager p) {
         super(c);
         this.page = p.getPage();
         this.pageSize = p.getPageSize();
@@ -100,8 +100,8 @@ public class PageList<E> extends ArrayList<E> implements Serializable {
 	 * 得到分页器，通过Paginator可以得到总页数等值
 	 * @return
 	 */
-	public Paginator getPaginator() {
-		return new Paginator(page,pageSize,totalItems);
+	public Pager getPaginator() {
+		return new Pager(page,pageSize,totalItems);
 	}
 	
 }
