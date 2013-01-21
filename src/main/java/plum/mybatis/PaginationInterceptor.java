@@ -123,10 +123,11 @@ public class PaginationInterceptor implements Interceptor, Serializable {
 		final Object parameter = queryArgs[PARAMETER_INDEX];
 		//the need for paging intercept.
 		boolean interceptor = ms.getId().matches(_sql_regex);
+		//obtain paging information.
+		final PageQuery pageQuery = interceptor ? Pagings.getInstance().findCriteria(parameter) :
+				new PageQuery(PageQuery.DEFAULT_PAGE_SIZE);
 		if (interceptor) {
-			//obtain paging information.
-			final PageQuery paginationCriteria = Pagings.getInstance().findCriteria(parameter);
-			PAGINATION_CRITERIA_THREAD_LOCAL.set(paginationCriteria);
+			PAGINATION_CRITERIA_THREAD_LOCAL.set(pageQuery);
 		}
 		final RowBounds rowBounds = (interceptor) ?
 				offset_paging((RowBounds) queryArgs[ROWBOUNDS_INDEX]) : (RowBounds) queryArgs[ROWBOUNDS_INDEX];
@@ -140,15 +141,25 @@ public class PaginationInterceptor implements Interceptor, Serializable {
 				LOG.debug("Pagination sql is <" + sql + ">");
 			}
 			//implementation of the access to the total number of SQL,to obtain  the total number and stored in the thread location
+
+			Connection connection = null;
 			try {
 				//get connection
-				final Connection connection = ms.getConfiguration().getEnvironment().getDataSource().getConnection();
+				connection = ms.getConfiguration().getEnvironment().getDataSource().getConnection();
 				int count = SQLHelp.getCount(sql, connection, ms, parameter, boundSql, _dialect);
-				Paginator paginator = new Paginator(PAGINATION_CRITERIA_THREAD_LOCAL.get().getPage(),PAGINATION_CRITERIA_THREAD_LOCAL.get().getPageSize(),count);
+				final Paginator paginator = new Paginator(pageQuery.getPage(), pageQuery.getPageSize(), count);
 				PAGINATION_COUNT.set(paginator);
 			} catch (SQLException e) {
 				LOG.error("The total number of access to the database fais.", e);
 				PAGINATION_COUNT.set(null);
+			} finally {
+				try {
+					if (connection != null && !connection.isClosed()) {
+						connection.close();
+					}
+				} catch (SQLException e) {
+					LOG.error("Close the database connection error.", e);
+				}
 			}
 			if (_dialect.supportsLimit()) {
 				sql = _dialect.getLimitString(sql, offset, limit);
